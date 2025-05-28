@@ -64,7 +64,7 @@ export default function Home() {
     const currentPage = Math.min(TOTAL_SIDEBAR_NUMBERS, Math.floor(scrollPercentage * TOTAL_SIDEBAR_NUMBERS) + 1);
 
     setVisibleSidebarPage(currentPage);
-  }, [isLoading, filteredFiles.length, filter, uploadedFiles]); // Added uploadedFiles to dependencies
+  }, [isLoading, filteredFiles, filter, uploadedFiles]); // Added filteredFiles to dependencies
 
   // Function to scroll to a specific 'visual page' section
   const scrollToPage = (pageNumber: number) => {
