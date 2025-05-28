@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server';
-import { getUploadthingUrl } from 'uploadthing/server';
+import { UTApi } from "uploadthing/server";
+
+const utapi = new UTApi();
 
 export async function GET() {
   try {
-    // Get all files from UploadThing
-    const files = await getUploadthingUrl();
+    // Get all files from UploadThing using the UTApi
+    const files = await utapi.listFiles();
     
     return NextResponse.json({ files });
   } catch (error) {
