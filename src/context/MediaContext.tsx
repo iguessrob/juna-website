@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode, } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 interface UploadedFile {
   url: string;
@@ -14,37 +14,44 @@ interface MediaContextType {
   uploadedFiles: UploadedFile[];
   setUploadedFiles: React.Dispatch<React.SetStateAction<UploadedFile[]>>;
   handleDelete: (fileUrl: string) => Promise<void>;
+  refreshFiles: () => Promise<void>;
+  isLoading: boolean;
 }
 
 const MediaContext = createContext<MediaContextType | undefined>(undefined);
 
 export const MediaProvider = ({ children }: { children: ReactNode }) => {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Load previously uploaded files from localStorage on component mount
-  useEffect(() => {
-    const savedFiles = localStorage.getItem('uploadedFiles');
-    if (savedFiles) {
-      try {
-        const parsedFiles = JSON.parse(savedFiles);
-        setUploadedFiles(parsedFiles);
-      } catch (error) {
-        console.error('Error parsing saved files:', error);
-        localStorage.removeItem('uploadedFiles');
+  // Function to fetch files from the API
+  const fetchFiles = async () => {
+    try {
+      const response = await fetch('/api/files');
+      if (!response.ok) {
+        throw new Error('Failed to fetch files');
       }
+      const data = await response.json();
+      setUploadedFiles(data.files || []);
+    } catch (error) {
+      console.error('Error fetching files:', error);
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  // Load files on component mount
+  useEffect(() => {
+    fetchFiles();
   }, []);
 
-  // Save uploaded files to localStorage whenever they change
-  useEffect(() => {
-    if (uploadedFiles.length > 0) {
-      localStorage.setItem('uploadedFiles', JSON.stringify(uploadedFiles));
-    }
-  }, [uploadedFiles]);
+  // Function to refresh files
+  const refreshFiles = async () => {
+    await fetchFiles();
+  };
 
   // Function to handle file deletion
   const handleDelete = async (fileUrl: string) => {
-    // Mark the file as deleting to trigger animation
     setUploadedFiles(prev => 
       prev.map(file => 
         file.url === fileUrl ? { ...file, isDeleting: true } : file
@@ -52,7 +59,6 @@ export const MediaProvider = ({ children }: { children: ReactNode }) => {
     );
 
     try {
-      // Call the backend API to delete the file
       const response = await fetch('/api/delete-file', {
         method: 'POST',
         headers: {
@@ -62,18 +68,10 @@ export const MediaProvider = ({ children }: { children: ReactNode }) => {
       });
 
       if (response.ok) {
-        console.log("File deleted successfully from backend:", fileUrl);
-        // Remove the file from state and localStorage after animation delay
         setTimeout(() => {
-          setUploadedFiles(prev => {
-            const updated = prev.filter(file => file.url !== fileUrl);
-            localStorage.setItem('uploadedFiles', JSON.stringify(updated));
-            return updated;
-          });
-        }, 300); // Adjust delay to match animation duration
+          setUploadedFiles(prev => prev.filter(file => file.url !== fileUrl));
+        }, 300);
       } else {
-        console.error("Failed to delete file from backend:", response.status, response.statusText);
-        // If backend deletion fails, revert isDeleting state
         setUploadedFiles(prev => 
           prev.map(file => 
             file.url === fileUrl ? { ...file, isDeleting: false } : file
@@ -82,7 +80,6 @@ export const MediaProvider = ({ children }: { children: ReactNode }) => {
       }
     } catch (error) {
       console.error("Error deleting file:", error);
-      // If an error occurs, revert isDeleting state
       setUploadedFiles(prev => 
         prev.map(file => 
           file.url === fileUrl ? { ...file, isDeleting: false } : file
@@ -92,7 +89,13 @@ export const MediaProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <MediaContext.Provider value={{ uploadedFiles, setUploadedFiles, handleDelete }}>
+    <MediaContext.Provider value={{ 
+      uploadedFiles, 
+      setUploadedFiles, 
+      handleDelete,
+      refreshFiles,
+      isLoading 
+    }}>
       {children}
     </MediaContext.Provider>
   );

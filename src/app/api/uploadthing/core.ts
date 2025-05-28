@@ -19,8 +19,6 @@ export const ourFileRouter = {
     .onUploadComplete(async ({ file }) => {
       console.log("Upload complete for image");
       console.log("File URL:", file.url);
-      console.log("File type:", file.type);
-      console.log("File size:", file.size);
       return { url: file.url };
     }),
 
@@ -32,8 +30,6 @@ export const ourFileRouter = {
     .onUploadComplete(async ({ file }) => {
       console.log("Upload complete for video");
       console.log("File URL:", file.url);
-      console.log("File type:", file.type);
-      console.log("File size:", file.size);
       return { url: file.url };
     }),
 } satisfies FileRouter;
