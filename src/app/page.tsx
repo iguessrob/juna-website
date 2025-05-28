@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import Image from "next/image";
 import { TrashIcon, ArrowDownTrayIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useMedia } from '@/context/MediaContext';
@@ -16,8 +16,6 @@ export default function Home() {
   const [selectedMedia, setSelectedMedia] = useState<UploadedFile | null>(null);
   const [filter] = useState<'all' | 'images' | 'videos'>('all');
   const [visibleSidebarPage, setVisibleSidebarPage] = useState(1); // Track which sidebar numbers are visually active
-  const [editingFileId, setEditingFileId] = useState<string | null>(null);
-  const [newFileName, setNewFileName] = useState('');
   const [lightboxRotation, setLightboxRotation] = useState(0);
 
   const galleryRef = useRef<HTMLDivElement>(null); // Ref for the gallery container to measure scroll position
@@ -33,13 +31,15 @@ export default function Home() {
     }
   }, [selectedMedia]);
 
-  // Filter files based on selected filter
-  const filteredFiles = Array.isArray(uploadedFiles) ? uploadedFiles.filter(file => {
-    if (filter === 'all') return true;
-    if (filter === 'images') return file.type.startsWith('image/');
-    if (filter === 'videos') return file.type.startsWith('video/');
-    return true;
-  }) : []; // Ensure filteredFiles is always an array
+  // Filter files based on selected filter - wrapped in useMemo to prevent unnecessary recalculations
+  const filteredFiles = useMemo(() => {
+    return Array.isArray(uploadedFiles) ? uploadedFiles.filter(file => {
+      if (filter === 'all') return true;
+      if (filter === 'images') return file.type.startsWith('image/');
+      if (filter === 'videos') return file.type.startsWith('video/');
+      return true;
+    }) : []; // Ensure filteredFiles is always an array
+  }, [uploadedFiles, filter]);
 
   // Effect for scroll-based sidebar visibility
   useEffect(() => {
@@ -117,16 +117,6 @@ export default function Home() {
   // Adjust container height based on ALL filtered files to ensure scrolling is possible
   // Ensure filteredFiles is an array before accessing length
   const containerMinHeight = `${Array.isArray(filteredFiles) ? Math.ceil(filteredFiles.length / 3) * 250 + 400 : 400}px`;
-
-  const handleSaveRename = (id: string, newName: string) => {
-    // Implement the logic to save the new file name
-    console.log(`Saving new name for file with id: ${id}, new name: ${newName}`);
-    setEditingFileId(null);
-  };
-
-  const handleCancelRename = () => {
-    setEditingFileId(null);
-  };
 
   const handleDownload = async (url: string, name: string) => {
     try {
