@@ -18,8 +18,8 @@ export const ourFileRouter = {
     })
     .onUploadComplete(async ({ file }) => {
       console.log("Upload complete for image");
-      console.log("File URL:", file.url);
-      return { url: file.url };
+      console.log("File URL:", file.ufsUrl);
+      return { url: file.ufsUrl, name: file.name, type: file.type, size: file.size };
     }),
 
   videoUploader: f({ video: { maxFileSize: "128MB" } })
@@ -29,8 +29,8 @@ export const ourFileRouter = {
     })
     .onUploadComplete(async ({ file }) => {
       console.log("Upload complete for video");
-      console.log("File URL:", file.url);
-      return { url: file.url };
+      console.log("File URL:", file.ufsUrl);
+      return { url: file.ufsUrl, name: file.name, type: file.type, size: file.size };
     }),
 } satisfies FileRouter;
 

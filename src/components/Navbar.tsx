@@ -15,7 +15,7 @@ interface FileProgress {
 const MAX_FILE_SIZE = 150 * 1024 * 1024; // 150MB in bytes
 
 export default function Navbar() {
-  const { setUploadedFiles, refreshFiles } = useMedia();
+  const { refreshFiles } = useMedia();
   const { startUpload: startImageUpload, isUploading: isImageUploading } = useUploadThing("imageUploader");
   const { startUpload: startVideoUpload, isUploading: isVideoUploading } = useUploadThing("videoUploader");
   const [loading, setLoading] = useState(false);
