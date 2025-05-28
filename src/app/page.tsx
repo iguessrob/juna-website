@@ -11,67 +11,51 @@ import { motion, AnimatePresence } from 'framer-motion';
 const TOTAL_SIDEBAR_NUMBERS = 12; // The total number of items in the sidebar
 
 export default function Home() {
-  const { uploadedFiles, handleDelete } = useMedia();
+  const { uploadedFiles, handleDelete, isLoading } = useMedia();
   const [selectedMedia, setSelectedMedia] = useState<string | null>(null);
   const [filter] = useState<'all' | 'images' | 'videos'>('all');
-  const [isLoading, setIsLoading] = useState(true);
   const [visibleSidebarPage, setVisibleSidebarPage] = useState(1); // Track which sidebar numbers are visually active
   // const [exitingItems, setExitingItems] = useState<string[]>([]); // Remove exitingItems state
 
   const galleryRef = useRef<HTMLDivElement>(null); // Ref for the gallery container to measure scroll position
 
-  useEffect(() => {
-    // Simulate initial loading state
-    const timer = setTimeout(() => setIsLoading(false), 1000);
-    return () => clearTimeout(timer);
-  }, []);
-
   // Filter files based on selected filter
-  const filteredFiles = uploadedFiles.filter(file => {
+  const filteredFiles = Array.isArray(uploadedFiles) ? uploadedFiles.filter(file => {
     if (filter === 'all') return true;
     if (filter === 'images') return file.type.startsWith('image/');
     if (filter === 'videos') return file.type.startsWith('video/');
     return true;
-  });
+  }) : []; // Ensure filteredFiles is always an array
 
   // Effect for scroll-based sidebar visibility
   useEffect(() => {
-    const handleScroll = () => {
-      if (!galleryRef.current || isLoading || filteredFiles.length === 0) return;
+    // Check if filteredFiles is an array and not empty
+    if (!galleryRef.current || isLoading || !Array.isArray(filteredFiles) || filteredFiles.length === 0) return;
 
-      const galleryTop = galleryRef.current.offsetTop;
-      const galleryHeight = galleryRef.current.scrollHeight; // Get the total scrollable height of the gallery
-      const scrollTop = window.scrollY;
-      const viewportHeight = window.innerHeight;
+    const galleryTop = galleryRef.current.offsetTop;
+    const galleryHeight = galleryRef.current.scrollHeight; // Get the total scrollable height of the gallery
+    const scrollTop = window.scrollY;
+    const viewportHeight = window.innerHeight;
 
-      // Calculate the scroll progress within the gallery container
-      const scrollableHeight = galleryHeight - viewportHeight;
-      const scrolledDistance = Math.max(0, scrollTop - galleryTop);
+    // Calculate the scroll progress within the gallery container
+    const scrollableHeight = galleryHeight - viewportHeight;
+    const scrolledDistance = Math.max(0, scrollTop - galleryTop);
 
-      if (scrollableHeight <= 10) {
-         setVisibleSidebarPage(1);
-         return;
-      }
+    if (scrollableHeight <= 10) {
+       setVisibleSidebarPage(1);
+       return;
+    }
 
-      const scrollPercentage = scrolledDistance / scrollableHeight;
-      const currentPage = Math.min(TOTAL_SIDEBAR_NUMBERS, Math.floor(scrollPercentage * TOTAL_SIDEBAR_NUMBERS) + 1);
+    const scrollPercentage = scrolledDistance / scrollableHeight;
+    const currentPage = Math.min(TOTAL_SIDEBAR_NUMBERS, Math.floor(scrollPercentage * TOTAL_SIDEBAR_NUMBERS) + 1);
 
-      setVisibleSidebarPage(currentPage);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    handleScroll();
-    window.addEventListener('resize', handleScroll);
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', handleScroll);
-    };
-  }, [isLoading, filteredFiles.length, filter]);
+    setVisibleSidebarPage(currentPage);
+  }, [isLoading, filteredFiles.length, filter, uploadedFiles]); // Added uploadedFiles to dependencies
 
   // Function to scroll to a specific 'visual page' section
   const scrollToPage = (pageNumber: number) => {
-    if (!galleryRef.current || isLoading || filteredFiles.length === 0) return;
+    // Check if filteredFiles is an array and not empty
+    if (!galleryRef.current || isLoading || !Array.isArray(filteredFiles) || filteredFiles.length === 0) return;
 
     const galleryTop = galleryRef.current.offsetTop;
     const galleryHeight = galleryRef.current.scrollHeight;
@@ -92,20 +76,21 @@ export default function Home() {
 
   // Function to generate more varied positions and rotations
   const getPolaroidStyle = (file: { url: string }) => {
-    // Positioning logic based on the index within the *filtered* files array
-    const filteredIndex = filteredFiles.findIndex(f => f.url === file.url);
-    if (filteredIndex === -1) return {}; 
+    // Ensure filteredFiles is an array before using findIndex
+    const filteredIndex = Array.isArray(filteredFiles) ? filteredFiles.findIndex(f => f.url === file.url) : -1;
+    if (filteredIndex === -1) return {};
 
-    const row = Math.floor(filteredIndex / 3); 
-    const col = filteredIndex % 3; 
-    
-    const baseTop = row * 200; 
-    const baseLeft = col * 300; 
-    
-    const topOffset = (Math.random() - 0.5) * 100; 
-    const leftOffset = (Math.random() - 0.5) * 100; 
-    const rotation = (Math.random() - 0.5) * 10; 
-    const zIndex = filteredFiles.length - filteredIndex; 
+    const row = Math.floor(filteredIndex / 3);
+    const col = filteredIndex % 3;
+
+    const baseTop = row * 200;
+    const baseLeft = col * 300;
+
+    const topOffset = (Math.random() - 0.5) * 100;
+    const leftOffset = (Math.random() - 0.5) * 100;
+    const rotation = (Math.random() - 0.5) * 10;
+    // Ensure filteredFiles is an array before accessing length
+    const zIndex = Array.isArray(filteredFiles) ? filteredFiles.length - filteredIndex : 0;
 
     return {
       top: `${baseTop + topOffset}px`,
@@ -116,19 +101,21 @@ export default function Home() {
   };
 
   // Adjust container height based on ALL filtered files to ensure scrolling is possible
-  const containerMinHeight = `${Math.ceil(filteredFiles.length / 3) * 250 + 400}px`;
+  // Ensure filteredFiles is an array before accessing length
+  const containerMinHeight = `${Array.isArray(filteredFiles) ? Math.ceil(filteredFiles.length / 3) * 250 + 400 : 400}px`;
 
   return (
     <div className="min-h-screen bg-[#f0f0f0] text-gray-900">
       {/* Sidebar with numbers - visually indicates scroll position and is clickable */}
       <div className="fixed left-0 top-0 bottom-0 w-20 flex flex-col items-center py-12 text-gray-500 font-mono z-20">
         <div className="flex-grow flex flex-col justify-center space-y-2 text-xl">
+          {/* Ensure filteredFiles is an array before using its length for disabling buttons */}
           {Array.from({ length: TOTAL_SIDEBAR_NUMBERS }, (_, i) => (
-             <button 
-                key={i} 
+             <button
+                key={i}
                 onClick={() => scrollToPage(i + 1)} // Add click handler
                 className={`transition-opacity duration-300 focus:outline-none ${ i + 1 <= visibleSidebarPage ? 'opacity-100 font-bold text-gray-900' : 'opacity-30 hover:text-gray-700'}`}
-                disabled={filteredFiles.length === 0 && i > 0}
+                disabled={!Array.isArray(filteredFiles) || (filteredFiles.length === 0 && i > 0)}
              >
                 {(i + 1).toString().padStart(2, '0')}
               </button>
@@ -142,8 +129,8 @@ export default function Home() {
            {/* PROGRAMS FEBRUARY 2021 Label */}
            <div className="text-sm text-gray-600 mb-2">MATCHA</div>
            <div className="text-xs text-gray-600 mb-8">AUGUST 15</div>
-           
-          <motion.h1 
+
+          <motion.h1
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-6xl font-extrabold mb-4 text-gray-900"
@@ -166,24 +153,25 @@ export default function Home() {
             ))}
           </div>
         ) : (
-           filteredFiles.length === 0 && uploadedFiles.length > 0 ? (
+           !Array.isArray(filteredFiles) || filteredFiles.length === 0 && uploadedFiles.length > 0 ? (
              <div className="text-center text-gray-600 text-lg">No media found matching the filter.</div>
-           ) : filteredFiles.length === 0 && uploadedFiles.length === 0 ? (
+           ) : !Array.isArray(filteredFiles) || filteredFiles.length === 0 && uploadedFiles.length === 0 ? (
               <div className="text-center text-gray-600 text-lg">No media uploaded yet.</div>
            ) : (
              <div className="relative" ref={galleryRef} style={{ minHeight: containerMinHeight }}>
                <AnimatePresence>
-                 {filteredFiles.map((file) => (
+                 {/* Ensure filteredFiles is an array before mapping over it */}
+                 {Array.isArray(filteredFiles) && filteredFiles.map((file) => (
                    <motion.div
                      key={`uploaded-${file.url}`}
                      initial={{ opacity: 0, scale: 0.8, y: 50 }}
                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                     exit={{ 
-                       opacity: 0, 
-                       scale: 0.5, 
-                       y: -50, 
+                     exit={{
+                       opacity: 0,
+                       scale: 0.5,
+                       y: -50,
                        rotate: -15,
-                       transition: { 
+                       transition: {
                          duration: 0.5,
                          ease: "easeInOut"
                        }
@@ -212,11 +200,11 @@ export default function Home() {
                          />
                        )}
                        {/* Delete Button - Redesigned */}
-                       <motion.button 
+                       <motion.button
                          onClick={(e: React.MouseEvent) => {
                            e.stopPropagation();
                            handleDelete(file.url);
-                         }} 
+                         }}
                          className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300 text-gray-600 hover:text-red-500 hover:bg-red-50 z-10"
                          whileHover={{ scale: 1.1 }}
                          whileTap={{ scale: 0.9 }}
@@ -229,7 +217,7 @@ export default function Home() {
                        </motion.button>
 
                        {/* Download Button - Redesigned to match */}
-                       <motion.button 
+                       <motion.button
                          onClick={(e) => {
                            e.stopPropagation();
                            const link = document.createElement('a');
@@ -264,7 +252,7 @@ export default function Home() {
 
         {/* Lightbox - keep for now, might need restyling */}
         {selectedMedia && (
-          <div 
+          <div
             className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4"
             onClick={() => setSelectedMedia(null)}
           >
