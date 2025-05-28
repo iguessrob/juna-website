@@ -120,13 +120,13 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="bg-gray-100/30 backdrop-blur-lg border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+    <nav className="bg-[#f1ebe1]/30 backdrop-blur-lg border-b border-[#c0cfb2] sticky top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <motion.h1 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="text-2xl font-semibold text-gray-800"
+            className="text-2xl font-semibold text-[#44624a]"
           >
             Juna&apos;s Gallery
           </motion.h1>
@@ -135,7 +135,7 @@ export default function Navbar() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="flex items-center space-x-2 px-4 py-2 rounded-md border border-gray-300 bg-white text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+              className="flex items-center space-x-2 px-4 py-2 rounded-md border border-[#c0cfb2] bg-[#ffffff] text-[#44624a] shadow-sm hover:bg-[#c0cfb2]/50 focus:outline-none focus:ring-2 focus:ring-[#8ba888] focus:ring-opacity-50"
               onClick={() => setShowUploadPreview(true)}
             >
               <CloudArrowUpIcon className="h-5 w-5" />
@@ -148,9 +148,9 @@ export default function Navbar() {
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.8 }}
-                  className="flex items-center space-x-2 text-sm text-gray-500"
+                  className="flex items-center space-x-2 text-sm text-[#8ba888]"
                 >
-                  <div className="w-4 h-4 border-2 border-gray-500 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-[#8ba888] border-t-transparent rounded-full animate-spin" />
                   <span>{isImageUploading || isVideoUploading ? 'Uploading...' : 'Processing...'}</span>
                 </motion.div>
               )}
@@ -166,37 +166,37 @@ export default function Navbar() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 p-4"
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 p-4 text-[#44624a]"
             onClick={handleCloseModal}
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              className="fixed top-[20vh] left-1/2 transform -translate-x-1/2 bg-white rounded-2xl p-8 max-w-md w-full shadow-3xl relative text-gray-900 flex flex-col items-center justify-center"
+              className="fixed top-[20vh] left-1/2 transform -translate-x-1/2 bg-[#ffffff] rounded-2xl p-8 max-w-md w-full shadow-3xl relative text-[#44624a] flex flex-col items-center justify-center"
               onClick={e => e.stopPropagation()}
             >
               {/* Close button */}
               <button
                 onClick={handleCloseModal}
-                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition-colors p-2 rounded-full hover:bg-gray-100"
+                className="absolute top-4 right-4 text-[#8ba888] hover:text-[#44624a] transition-colors p-2 rounded-full hover:bg-[#c0cfb2]"
                 disabled={isImageUploading || isVideoUploading || loading}
               >
                 <XMarkIcon className="h-6 w-6" />
               </button>
 
               <div className="flex flex-col items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Upload Your Media</h2>
+                <h2 className="text-2xl font-bold text-[#44624a] mb-2">Upload Your Media</h2>
                 <p className="text-base text-gray-600 text-center">
                   {isImageUploading || isVideoUploading ? 'Uploading your files... Please wait.' : 'Drag and drop your images or videos here, or click to browse.'}
                 </p>
-                <p className="text-sm text-gray-500 mt-2">Maximum file size: 150MB</p>
+                <p className="text-sm text-[#8ba888] mt-2">Maximum file size: 150MB</p>
               </div>
 
               {!isImageUploading && !isVideoUploading && !loading ? (
                 <>
                   {warning && (
-                    <div className="w-full mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <div className="w-full mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-black">
                       <div className="flex items-center space-x-2">
                         <ExclamationTriangleIcon className="h-5 w-5 text-yellow-500" />
                         <p className="text-sm text-yellow-700">{warning}</p>
@@ -205,12 +205,12 @@ export default function Navbar() {
                   )}
 
                   {error && (
-                    <div className="w-full mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <div className="w-full mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-black">
                       <p className="text-sm text-red-600">{error}</p>
                     </div>
                   )}
 
-                  <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 transition-colors duration-200 hover:border-gray-400 mb-6 w-full">
+                  <div className="border-2 border-dashed border-[#c0cfb2] rounded-xl p-8 transition-colors duration-200 hover:border-[#8ba888] mb-6 w-full">
                     <UploadZone onUpload={handleUpload} />
                   </div>
                 </>
@@ -259,8 +259,8 @@ export default function Navbar() {
                   disabled={isImageUploading || isVideoUploading || loading}
                   className={`px-6 py-3 rounded-lg transition-colors duration-200 ${
                     isImageUploading || isVideoUploading || loading
-                      ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                      : 'bg-gray-300 text-gray-800 hover:bg-gray-400'
+                      ? 'bg-[#c0cfb2] text-[#8ba888] cursor-not-allowed'
+                      : 'bg-[#c0cfb2] text-[#44624a] hover:bg-[#8ba888]'
                   }`}
                 >
                   Cancel Upload

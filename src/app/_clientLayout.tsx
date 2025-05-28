@@ -8,7 +8,10 @@ export default function ClientLayoutContent({ children }: { children: ReactNode 
   return (
     <MediaProvider>
       <Navbar />
-      {children}
+      {/* Main content area container */}
+      <div className="flex flex-row flex-1 overflow-hidden"> {/* flex-1 makes this div fill height below Navbar, flex-row for sidebar and main content */}
+        {children}
+      </div>
     </MediaProvider>
   );
 }
