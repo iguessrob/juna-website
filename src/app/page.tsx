@@ -173,7 +173,7 @@ export default function Home() {
            ) : (
              <div className="relative" ref={galleryRef} style={{ minHeight: containerMinHeight }}>
                <AnimatePresence>
-                 {filteredFiles.map((file, index) => (
+                 {filteredFiles.map((file) => (
                    <motion.div
                      key={`uploaded-${file.url}`}
                      initial={{ opacity: 0, scale: 0.8, y: 50 }}
