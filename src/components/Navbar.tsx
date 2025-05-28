@@ -15,7 +15,7 @@ interface FileProgress {
 const MAX_FILE_SIZE = 150 * 1024 * 1024; // 150MB in bytes
 
 export default function Navbar() {
-  const { setUploadedFiles } = useMedia();
+  const { setUploadedFiles, refreshFiles } = useMedia();
   const { startUpload: startImageUpload, isUploading: isImageUploading } = useUploadThing("imageUploader");
   const { startUpload: startVideoUpload, isUploading: isVideoUploading } = useUploadThing("videoUploader");
   const [loading, setLoading] = useState(false);
@@ -65,12 +65,16 @@ export default function Navbar() {
       const videoFiles = filesWithCustomNames.filter(f => f.file.type.startsWith('video/'));
 
       // Upload images and videos separately
-      const [uploadedImages, uploadedVideos] = await Promise.all([
+      const [uploadedImagesResult, uploadedVideosResult] = await Promise.all([
         imageFiles.length > 0 ? startImageUpload(imageFiles.map(f => f.file)) : Promise.resolve([]),
         videoFiles.length > 0 ? startVideoUpload(videoFiles.map(f => f.file)) : Promise.resolve([])
       ]);
 
-      const allUploaded = [...(uploadedImages || []), ...(uploadedVideos || [])];
+      // Ensure uploaded results are treated as arrays
+      const uploadedImages = Array.isArray(uploadedImagesResult) ? uploadedImagesResult : (uploadedImagesResult ? [uploadedImagesResult] : []);
+      const uploadedVideos = Array.isArray(uploadedVideosResult) ? uploadedVideosResult : (uploadedVideosResult ? [uploadedVideosResult] : []);
+
+      const allUploaded = [...uploadedImages, ...uploadedVideos];
       
       if (allUploaded.length > 0) {
         // Update progress for each file
@@ -85,21 +89,13 @@ export default function Navbar() {
           }, index * 500);
         });
 
-        setUploadedFiles(prev => {
-          const newUploaded = allUploaded.map((file, index) => ({
-            url: file.url,
-            name: filesWithCustomNames[index].customName,
-            type: file.type || '',
-            size: file.size || 0,
-            isDeleting: false,
-          }));
-          return [...prev, ...newUploaded];
-        });
+        setTimeout(async () => {
+           await refreshFiles();
+        }, filesWithCustomNames.length * 500 + 600);
 
-        // Wait for progress animation to complete before closing
         setTimeout(() => {
           setShowUploadPreview(false);
-        }, filesWithCustomNames.length * 500 + 500);
+        }, filesWithCustomNames.length * 500 + 1000);
       }
     } catch (error) {
       console.error("Error uploading files:", error);
@@ -116,6 +112,7 @@ export default function Navbar() {
       setShowUploadPreview(false);
       setError(null);
       setWarning(null);
+      refreshFiles();
     }
   };
 
