@@ -91,7 +91,7 @@ export default function Navbar() {
 
         setTimeout(async () => {
            await refreshFiles();
-        }, filesWithCustomNames.length * 500 + 600);
+        }, filesWithCustomNames.length * 500 + 1500);
 
         setTimeout(() => {
           setShowUploadPreview(false);
