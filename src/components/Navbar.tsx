@@ -16,7 +16,6 @@ const MAX_FILE_SIZE = 150 * 1024 * 1024; // 150MB in bytes
 
 export default function Navbar() {
   const { setUploadedFiles } = useMedia();
-  const [files, setFiles] = useState<File[]>([]);
   const { startUpload: startImageUpload, isUploading: isImageUploading } = useUploadThing("imageUploader");
   const { startUpload: startVideoUpload, isUploading: isVideoUploading } = useUploadThing("videoUploader");
   const [loading, setLoading] = useState(false);
@@ -44,7 +43,6 @@ export default function Navbar() {
       newFiles = validFiles;
     }
 
-    setFiles(newFiles);
     setLoading(true);
     setUploadProgress(0);
     setFileProgressList(newFiles.map(file => ({ name: file.name, progress: 0 })));
@@ -108,9 +106,8 @@ export default function Navbar() {
       setError("An error occurred while uploading files. Please try again.");
     } finally {
       setLoading(false);
-      setFiles([]);
-      setUploadProgress(0);
       setFileProgressList([]);
+      setUploadProgress(0);
     }
   };
 
@@ -121,8 +118,6 @@ export default function Navbar() {
       setWarning(null);
     }
   };
-
-  const isUploading = isImageUploading || isVideoUploading;
 
   return (
     <nav className="bg-gray-100/30 backdrop-blur-lg border-b border-gray-200 sticky top-0 z-50 shadow-sm">

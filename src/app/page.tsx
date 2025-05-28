@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from "next/image";
-import { TrashIcon, PhotoIcon, VideoCameraIcon } from '@heroicons/react/24/outline';
+import { TrashIcon } from '@heroicons/react/24/outline';
 import { useMedia } from '@/context/MediaContext';
 import { motion, AnimatePresence } from 'framer-motion';
 // We might replace Masonry later depending on the exact polaroid layout needs
@@ -91,7 +91,7 @@ export default function Home() {
   };
 
   // Function to generate more varied positions and rotations
-  const getPolaroidStyle = (file: { url: string }, _index: number) => {
+  const getPolaroidStyle = (file: { url: string }) => {
     // Positioning logic based on the index within the *filtered* files array
     const filteredIndex = filteredFiles.findIndex(f => f.url === file.url);
     if (filteredIndex === -1) return {}; 
@@ -148,10 +148,9 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             className="text-6xl font-extrabold mb-4 text-gray-900"
           >
-            Juna's Gallery
+            Juna&apos;s Gallery
           </motion.h1>
           <p className="text-gray-700 max-w-lg">
-            {/* Placeholder for a shorter description to match the reference image */}
             Discover the beauty of Gabriel Umlas&apos;s work
           </p>
         </div>
@@ -191,7 +190,7 @@ export default function Home() {
                      }}
                      transition={{ duration: 0.4 }}
                      className="absolute bg-white p-2 shadow-xl hover:rotate-0 hover:scale-105 transition-transform duration-300 cursor-pointer origin-center group"
-                     style={getPolaroidStyle(file, index)}
+                     style={getPolaroidStyle(file)}
                      onClick={() => setSelectedMedia(file.url)}
                    >
                      <div className="relative overflow-hidden bg-gray-200" style={{ width: '250px' }}>
