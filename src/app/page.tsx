@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Image from "next/image";
-import { TrashIcon } from '@heroicons/react/24/outline';
+import { TrashIcon, ArrowDownTrayIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useMedia } from '@/context/MediaContext';
+import { UploadedFile } from '@/context/MediaContext';
 import { motion, AnimatePresence } from 'framer-motion';
 // We might replace Masonry later depending on the exact polaroid layout needs
 // import Masonry from 'react-masonry-css';
@@ -12,12 +13,25 @@ const TOTAL_SIDEBAR_NUMBERS = 12; // The total number of items in the sidebar
 
 export default function Home() {
   const { uploadedFiles, handleDelete, isLoading } = useMedia();
-  const [selectedMedia, setSelectedMedia] = useState<string | null>(null);
+  const [selectedMedia, setSelectedMedia] = useState<UploadedFile | null>(null);
   const [filter] = useState<'all' | 'images' | 'videos'>('all');
   const [visibleSidebarPage, setVisibleSidebarPage] = useState(1); // Track which sidebar numbers are visually active
-  // const [exitingItems, setExitingItems] = useState<string[]>([]); // Remove exitingItems state
+  const [editingFileId, setEditingFileId] = useState<string | null>(null);
+  const [newFileName, setNewFileName] = useState('');
+  const [lightboxRotation, setLightboxRotation] = useState(0);
 
   const galleryRef = useRef<HTMLDivElement>(null); // Ref for the gallery container to measure scroll position
+
+  // Effect to set random rotation for lightbox when opened
+  useEffect(() => {
+    if (selectedMedia) {
+      // Generate a random rotation between -5 and 5 degrees
+      const randomRotation = (Math.random() - 0.5) * 10;
+      setLightboxRotation(randomRotation);
+    } else {
+      setLightboxRotation(0);
+    }
+  }, [selectedMedia]);
 
   // Filter files based on selected filter
   const filteredFiles = Array.isArray(uploadedFiles) ? uploadedFiles.filter(file => {
@@ -104,6 +118,40 @@ export default function Home() {
   // Ensure filteredFiles is an array before accessing length
   const containerMinHeight = `${Array.isArray(filteredFiles) ? Math.ceil(filteredFiles.length / 3) * 250 + 400 : 400}px`;
 
+  const handleSaveRename = (id: string, newName: string) => {
+    // Implement the logic to save the new file name
+    console.log(`Saving new name for file with id: ${id}, new name: ${newName}`);
+    setEditingFileId(null);
+  };
+
+  const handleCancelRename = () => {
+    setEditingFileId(null);
+  };
+
+  const handleDownload = async (url: string, name: string) => {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Failed to download file: ${response.statusText}`);
+      }
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = name; // Set the desired filename
+      document.body.appendChild(a);
+      a.click();
+
+      // Clean up
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      // Optionally, show an error message to the user
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#f0f0f0] text-gray-900">
       {/* Sidebar with numbers - visually indicates scroll position and is clickable */}
@@ -179,7 +227,7 @@ export default function Home() {
                      transition={{ duration: 0.4 }}
                      className="absolute bg-white p-2 shadow-xl hover:rotate-0 hover:scale-105 transition-transform duration-300 cursor-pointer origin-center group"
                      style={getPolaroidStyle(file)}
-                     onClick={() => setSelectedMedia(file.url)}
+                     onClick={() => setSelectedMedia(file)}
                    >
                      <div className="relative overflow-hidden bg-gray-200" style={{ width: '250px' }}>
                        {file.type.startsWith('image/') ? (
@@ -199,6 +247,7 @@ export default function Home() {
                            style={{ aspectRatio: 'auto' }}
                          />
                        )}
+
                        {/* Delete Button - Redesigned */}
                        <motion.button
                          onClick={(e: React.MouseEvent) => {
@@ -218,14 +267,10 @@ export default function Home() {
 
                        {/* Download Button - Redesigned to match */}
                        <motion.button
-                         onClick={(e) => {
+                         onClick={(e: React.MouseEvent) => {
                            e.stopPropagation();
-                           const link = document.createElement('a');
-                           link.href = file.url;
-                           link.download = file.name;
-                           document.body.appendChild(link);
-                           link.click();
-                           document.body.removeChild(link);
+                           // Use handleDownload function instead of creating a link
+                           handleDownload(file.url, file.name);
                          }}
                          className="absolute bottom-2 right-2 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300 text-gray-600 hover:text-blue-500 hover:bg-blue-50 z-10"
                          whileHover={{ scale: 1.1 }}
@@ -235,13 +280,13 @@ export default function Home() {
                          exit={{ opacity: 0, scale: 0.8 }}
                          aria-label="Download file"
                        >
-                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                           <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                         </svg>
+                         {/* Download Icon */}
+                         <ArrowDownTrayIcon className="h-5 w-5" />
                        </motion.button>
                      </div>
+
                      <div className="mt-2 text-sm text-gray-700 truncate px-2">
-                       {file.name}
+                       {new Date(file.uploadedAt).toLocaleDateString()}
                      </div>
                    </motion.div>
                  ))}
@@ -250,38 +295,61 @@ export default function Home() {
            )
         )}
 
-        {/* Lightbox - keep for now, might need restyling */}
-        {selectedMedia && (
-          <div
-            className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4"
-            onClick={() => setSelectedMedia(null)}
-          >
-            <button
-              className="absolute top-4 right-4 text-white hover:text-gray-300"
-              onClick={() => setSelectedMedia(null)}
+        {/* Lightbox */}
+        <AnimatePresence> {/* Wrap with AnimatePresence for exit animations */}
+          {selectedMedia && (
+            <motion.div
+              initial={{ opacity: 0 }} // Initial animation state
+              animate={{ opacity: 1 }} // Animation to
+              exit={{ opacity: 0 }}    // Exit animation state
+              className="fixed inset-0 bg-black/50 backdrop-blur-lg z-50 flex items-center justify-center p-4"
+              onClick={() => setSelectedMedia(null)} // Close on overlay click
             >
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-            <div className="max-w-7xl max-h-[90vh] w-full h-full flex items-center justify-center">
-              {selectedMedia.startsWith('data:image') ? (
-                <Image
-                  src={selectedMedia}
-                  alt="Selected media"
-                  fill
-                  className="object-contain"
-                />
-              ) : (
-                <video
-                  src={selectedMedia}
-                  controls
-                  className="max-w-full max-h-[90vh]"
-                />
-              )}
-            </div>
-          </div>
-        )}
+              <motion.div
+                initial={{ scale: 0.5, opacity: 0, rotate: 0 }} // Initial animation for media container with rotation
+                animate={{ scale: 1, opacity: 1, rotate: lightboxRotation }}   // Animation to with random rotation
+                exit={{ scale: 0.5, opacity: 0, rotate: 0 }}    // Exit animation with rotation reset
+                transition={{ duration: 0.3, ease: "easeInOut" }}      // Animation duration and ease
+                className="relative bg-white p-2 shadow-xl flex flex-col items-center justify-center"
+                style={{ maxWidth: '90vw', maxHeight: '90vh' }}
+                onClick={e => e.stopPropagation()} // Prevent closing when clicking on the media container
+              >
+                {/* Close button */}
+                <button
+                  className="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1.5 hover:bg-black/70 transition-colors z-10"
+                  onClick={() => setSelectedMedia(null)}
+                >
+                  <XMarkIcon className="h-5 w-5" />
+                </button>
+
+                {/* Media (Image or Video) */}
+                <div className="relative overflow-hidden bg-gray-200" style={{ width: 'auto', height: 'auto' }}> {/* Container for media to maintain aspect ratio and match gallery item */}
+                  {selectedMedia.type.startsWith('image/') ? (
+                    <Image
+                      src={selectedMedia.url}
+                      alt="Selected media"
+                      width={800} // Set a reasonable default width for the lightbox
+                      height={600} // Set a reasonable default height for the lightbox
+                      className="object-contain max-w-full max-h-full"
+                    />
+                  ) : (
+                    <video
+                      src={selectedMedia.url}
+                      controls
+                      className="object-contain max-w-full max-h-full"
+                    />
+                  )}
+                </div>
+
+                {/* Display Date below the media */}
+                 <div className="mt-2 text-sm text-gray-700 truncate px-2">
+                   {new Date(selectedMedia.uploadedAt).toLocaleDateString()}
+                 </div>
+
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
 
     </div>

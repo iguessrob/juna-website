@@ -49,25 +49,28 @@ export default function Navbar() {
 
     try {
       // Prompt for custom filename for each file
-      const filesWithCustomNames = await Promise.all(
-        newFiles.map(async (file) => {
-          const defaultName = file.name;
-          const customName = prompt(`Enter a name for ${defaultName} (or press OK to keep original name):`, defaultName);
-          return {
-            file,
-            customName: customName || defaultName
-          };
-        })
-      );
+      // const filesWithCustomNames = await Promise.all(
+      //   newFiles.map(async (file) => {
+      //     const defaultName = file.name;
+      //     const customName = prompt(`Enter a name for ${defaultName} (or press OK to keep original name):`, defaultName);
+      //     return {
+      //       file,
+      //       customName: customName || defaultName
+      //     };
+      //   })
+      // );
 
       // Separate files into images and videos
-      const imageFiles = filesWithCustomNames.filter(f => f.file.type.startsWith('image/'));
-      const videoFiles = filesWithCustomNames.filter(f => f.file.type.startsWith('video/'));
+      // const imageFiles = filesWithCustomNames.filter(f => f.file.type.startsWith('image/'));
+      // const videoFiles = filesWithCustomNames.filter(f => f.file.type.startsWith('video/'));
+
+      const imageFiles = newFiles.filter(file => file.type.startsWith('image/'));
+      const videoFiles = newFiles.filter(file => file.type.startsWith('video/'));
 
       // Upload images and videos separately
       const [uploadedImagesResult, uploadedVideosResult] = await Promise.all([
-        imageFiles.length > 0 ? startImageUpload(imageFiles.map(f => f.file)) : Promise.resolve([]),
-        videoFiles.length > 0 ? startVideoUpload(videoFiles.map(f => f.file)) : Promise.resolve([])
+        imageFiles.length > 0 ? startImageUpload(imageFiles) : Promise.resolve([]),
+        videoFiles.length > 0 ? startVideoUpload(videoFiles) : Promise.resolve([])
       ]);
 
       // Ensure uploaded results are treated as arrays
@@ -78,24 +81,24 @@ export default function Navbar() {
       
       if (allUploaded.length > 0) {
         // Update progress for each file
-        filesWithCustomNames.forEach((_, index) => {
+        newFiles.forEach((_, index) => {
           setTimeout(() => {
             setFileProgressList(prev => {
               const newFiles = [...prev];
               newFiles[index] = { ...newFiles[index], progress: 100 };
               return newFiles;
             });
-            setUploadProgress(((index + 1) / filesWithCustomNames.length) * 100);
+            setUploadProgress(((index + 1) / newFiles.length) * 100);
           }, index * 500);
         });
 
         setTimeout(async () => {
            await refreshFiles();
-        }, filesWithCustomNames.length * 500 + 1500);
+        }, newFiles.length * 500 + 1500);
 
         setTimeout(() => {
           setShowUploadPreview(false);
-        }, filesWithCustomNames.length * 500 + 1000);
+        }, newFiles.length * 500 + 1000);
       }
     } catch (error) {
       console.error("Error uploading files:", error);

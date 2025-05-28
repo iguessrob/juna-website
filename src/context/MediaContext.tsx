@@ -2,11 +2,13 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-interface UploadedFile {
+export interface UploadedFile {
+  id: string;
   url: string;
   name: string;
   type: string;
   size: number;
+  uploadedAt: number;
   isDeleting?: boolean;
 }
 
