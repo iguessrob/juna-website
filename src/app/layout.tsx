@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display, Source_Sans_3 } from "next/font/google";
+import { Playfair_Display, Source_Sans_3 } from "next/font/google";
 import "./globals.css";
 // We will import and use _clientLayout content here
 import ClientLayoutContent from './_clientLayout';
 import { MediaProvider } from '@/context/MediaContext';
 
-const inter = Inter({ subsets: ["latin"] });
 const playfairDisplay = Playfair_Display({ subsets: ["latin"], variable: '--font-playfair-display' });
 const sourceSansPro = Source_Sans_3({ subsets: ["latin"], weight: ['400', '700'], variable: '--font-source-sans-pro' });
 

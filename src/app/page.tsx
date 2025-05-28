@@ -10,8 +10,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 // We might replace Masonry later depending on the exact polaroid layout needs
 // import Masonry from 'react-masonry-css';
 
-const TOTAL_SIDEBAR_NUMBERS = 12; // The total number of items in the sidebar
-
 export default function Home() {
   const { uploadedFiles, handleDelete, isLoading } = useMedia();
   const [selectedMedia, setSelectedMedia] = useState<UploadedFile | null>(null);
@@ -158,9 +156,6 @@ export default function Home() {
     };
   };
 
-  // Adjust container height based on ALL filtered files to ensure scrolling is possible
-  const containerMinHeight = `${Array.isArray(filteredFiles) ? Math.ceil(filteredFiles.length / 3) * 250 + 400 : 400}px`;
-
   const handleDownload = async (url: string, name: string) => {
     try {
       const response = await fetch(url);
@@ -261,7 +256,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="relative aspect-square cursor-pointer bg-[--polaroid-background] p-3 md:p-5 shadow-lg transform transition-transform hover:scale-105 group hover:shadow-xl"
+                className="relative aspect-square cursor-pointer bg-white p-3 md:p-5 shadow-lg transform transition-transform hover:scale-105 group hover:shadow-xl"
                 onClick={() => setSelectedMedia(file)}
                 data-scroll-id={`item-${index}`}
                 style={getPolaroidStyle(file)}
@@ -325,7 +320,7 @@ export default function Home() {
               {[...Array(9)].map((_, i) => (
                 <div
                   key={i}
-                  className="relative aspect-square bg-[--polaroid-background] p-3 md:p-5 shadow-lg animate-pulse"
+                  className="relative aspect-square bg-white p-3 md:p-5 shadow-lg animate-pulse"
                 >
                   <div className="w-full h-full bg-gray-300 flex items-center justify-center">
                     {/* Optional: Add a placeholder icon or text */}
