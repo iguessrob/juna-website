@@ -13,7 +13,7 @@ const TOTAL_SIDEBAR_NUMBERS = 12; // The total number of items in the sidebar
 export default function Home() {
   const { uploadedFiles, handleDelete } = useMedia();
   const [selectedMedia, setSelectedMedia] = useState<string | null>(null);
-  const [filter, setFilter] = useState<'all' | 'images' | 'videos'>('all');
+  const [filter] = useState<'all' | 'images' | 'videos'>('all');
   const [isLoading, setIsLoading] = useState(true);
   const [visibleSidebarPage, setVisibleSidebarPage] = useState(1); // Track which sidebar numbers are visually active
   // const [exitingItems, setExitingItems] = useState<string[]>([]); // Remove exitingItems state
@@ -91,7 +91,7 @@ export default function Home() {
   };
 
   // Function to generate more varied positions and rotations
-  const getPolaroidStyle = (file: any, index: number) => {
+  const getPolaroidStyle = (file: { url: string }, _index: number) => {
     // Positioning logic based on the index within the *filtered* files array
     const filteredIndex = filteredFiles.findIndex(f => f.url === file.url);
     if (filteredIndex === -1) return {}; 
@@ -152,7 +152,7 @@ export default function Home() {
           </motion.h1>
           <p className="text-gray-700 max-w-lg">
             {/* Placeholder for a shorter description to match the reference image */}
-            Discover the beauty of Gabriel Umlas
+            Discover the beauty of Gabriel Umlas&apos;s work
           </p>
         </div>
 

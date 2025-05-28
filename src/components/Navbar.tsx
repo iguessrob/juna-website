@@ -133,7 +133,7 @@ export default function Navbar() {
             animate={{ opacity: 1, x: 0 }}
             className="text-2xl font-semibold text-gray-800"
           >
-            Juna's Gallery
+            Juna&apos;s Gallery
           </motion.h1>
 
           <div className="flex items-center space-x-4">
@@ -171,14 +171,14 @@ export default function Navbar() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 p-4"
             onClick={handleCloseModal}
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              className="bg-white rounded-2xl p-8 max-w-md w-full shadow-3xl relative text-gray-900 flex flex-col items-center justify-center"
+              className="fixed top-[20vh] left-1/2 transform -translate-x-1/2 bg-white rounded-2xl p-8 max-w-md w-full shadow-3xl relative text-gray-900 flex flex-col items-center justify-center"
               onClick={e => e.stopPropagation()}
             >
               {/* Close button */}

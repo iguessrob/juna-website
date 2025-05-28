@@ -7,8 +7,6 @@ interface UploadZoneProps {
   onUpload: (files: File[]) => void;
 }
 
-const MAX_FILE_SIZE = 150 * 1024 * 1024; // 150MB in bytes
-
 export default function UploadZone({ onUpload }: UploadZoneProps) {
   const onDrop = useCallback((acceptedFiles: File[]) => {
     onUpload(acceptedFiles);
