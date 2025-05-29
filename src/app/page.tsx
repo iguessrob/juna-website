@@ -203,11 +203,6 @@ export default function Home() {
     }
   }, []);
 
-  // Interactive Animation on Button Click
-  const handleButtonClick = () => {
-    gsap.to(gsapHeaderRef.current, { scale: 1.2, duration: 0.3, yoyo: true, repeat: 1 });
-  };
-
   // Effect to update visible sidebar page based on scroll position
   useEffect(() => {
     const mainContentEl = mainContentRef.current;
