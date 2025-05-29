@@ -9,7 +9,7 @@ export interface UploadedFile {
   type: string;
   size: number;
   uploadedAt: number;
-  isDeleting?: boolean;
+  isDeleting: boolean;
 }
 
 interface MediaContextType {
@@ -31,12 +31,13 @@ export const MediaProvider = ({ children }: { children: ReactNode }) => {
     try {
       const response = await fetch('/api/files');
       if (!response.ok) {
-        throw new Error('Failed to fetch files');
+        throw new Error(`Failed to fetch files: ${response.statusText}`);
       }
       const data = await response.json();
       setUploadedFiles(data.files || []);
     } catch (error) {
-      console.error('Error fetching files:', error);
+      console.error('Error fetching files:', error instanceof Error ? error.message : 'Unknown error');
+      setUploadedFiles([]); // Reset to empty array on error
     } finally {
       setIsLoading(false);
     }

@@ -6,9 +6,15 @@ import { TrashIcon, ArrowDownTrayIcon, XMarkIcon } from '@heroicons/react/24/out
 import { useMedia } from '@/context/MediaContext';
 import { UploadedFile } from '@/context/MediaContext';
 import { motion, AnimatePresence } from 'framer-motion';
-// import useLocomotiveScroll from '@/hooks/useLocomotiveScroll'; // Removed Locomotive Scroll
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { TextPlugin } from 'gsap/TextPlugin';
+// import useLocomotiveScroll from '@/hooks/useLocomotiveScroll'; // Re-enabled Locomotive Scroll hook
 // We might replace Masonry later depending on the exact polaroid layout needs
 // import Masonry from 'react-masonry-css';
+
+// Register GSAP plugins
+gsap.registerPlugin(ScrollTrigger, TextPlugin);
 
 export default function Home() {
   const { uploadedFiles, handleDelete, isLoading } = useMedia();
@@ -20,8 +26,34 @@ export default function Home() {
   // Create a ref for the main scrollable content area
   const mainContentRef = useRef<HTMLDivElement>(null);
 
+  // Refs for GSAP animations
+  const gsapHeaderRef = useRef<HTMLHeadingElement>(null);
+  const polaroidRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const sidebarBtnRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const lightboxRef = useRef<HTMLDivElement>(null);
+  const sectionRefs = useRef<(HTMLDivElement | null)[]>([] as (HTMLDivElement | null)[]);
+  const parallaxRef = useRef<HTMLDivElement>(null);
+  const loadingRef = useRef<HTMLDivElement>(null);
+  const matchaRef = useRef<HTMLDivElement>(null);
+  const dateRef = useRef<HTMLDivElement>(null);
+  const descriptionRef = useRef<HTMLParagraphElement>(null);
+
   // Use the custom hook and get the scroll ref
-  // const { scrollRef, scroll } = useLocomotiveScroll(); // Removed Locomotive Scroll
+  // const { scrollRef, scroll } = useLocomotiveScroll(); // Re-enabled hook usage
+
+  // Filter files based on selected filter - wrapped in useMemo to prevent unnecessary recalculations
+  const filteredFiles = useMemo(() => {
+    return Array.isArray(uploadedFiles) ? uploadedFiles.filter(file => {
+      if (filter === 'all') return true;
+      if (filter === 'images') return file.type.startsWith('image/');
+      if (filter === 'videos') return file.type.startsWith('video/');
+      return true;
+    }) : []; // Ensure filteredFiles is always an array
+  }, [uploadedFiles, filter]);
+
+  // Calculate total pages needed based on filtered files and items per page
+  const itemsPerPage = 6; // Should match the itemsPerPage used in scrollToPage and pageHasImages
+  const totalPages = filteredFiles && filteredFiles.length > 0 ? Math.ceil(filteredFiles.length / itemsPerPage) : 1; // Ensure at least 1 page if no files
 
   // Effect to set random rotation for lightbox when opened
   useEffect(() => {
@@ -34,15 +66,147 @@ export default function Home() {
     }
   }, [selectedMedia]);
 
-  // Filter files based on selected filter - wrapped in useMemo to prevent unnecessary recalculations
-  const filteredFiles = useMemo(() => {
-    return Array.isArray(uploadedFiles) ? uploadedFiles.filter(file => {
-      if (filter === 'all') return true;
-      if (filter === 'images') return file.type.startsWith('image/');
-      if (filter === 'videos') return file.type.startsWith('video/');
-      return true;
-    }) : []; // Ensure filteredFiles is always an array
-  }, [uploadedFiles, filter]);
+  // GSAP animation for the header with typing effect
+  useEffect(() => {
+    if (gsapHeaderRef.current) {
+      gsapHeaderRef.current.textContent = '';
+      gsap.to(gsapHeaderRef.current, {
+        duration: 2.5,
+        delay: 3, // Delay animation until loading screen fades out
+        text: "Juna's Gallery",
+        ease: "power1.inOut", // Use a subtle ease for smoother typing
+        onComplete: () => {
+          gsap.to(gsapHeaderRef.current, { opacity: 1, rotate: 0, duration: 1.2, ease: 'power3.out' });
+        }
+      });
+      // Fallback: ensure text is set after animation
+      setTimeout(() => {
+        if (gsapHeaderRef.current && !gsapHeaderRef.current.textContent) {
+          gsapHeaderRef.current.textContent = "Juna's Gallery";
+        }
+      }, 6000); // Adjust fallback delay: 3s animation delay + 2.5s animation duration + small buffer
+    }
+  }, []);
+
+  // GSAP animations for header sub-text (MATCHA, AUGUST 15, Description)
+  useEffect(() => {
+    const elements = [matchaRef.current, dateRef.current, descriptionRef.current];
+    gsap.fromTo(
+      elements,
+      { opacity: 0, y: 20 },
+      { opacity: 1, y: 0, duration: 0.8, stagger: 0.15, ease: 'power2.out', delay: 3.5 } // Delay slightly after header animation starts
+    );
+  }, []);
+
+  // GSAP animation for polaroid grid items with timeline
+  useEffect(() => {
+    if (polaroidRefs.current.length > 0) {
+      const tl = gsap.timeline();
+      tl.fromTo(
+        polaroidRefs.current,
+        { opacity: 0, y: 40, scale: 0.9 },
+        {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: 0.7,
+          stagger: 0.08,
+          ease: 'power3.out',
+        }
+      );
+    }
+  }, [filteredFiles]);
+
+  // GSAP animation for sidebar buttons (on mount)
+  useEffect(() => {
+    if (sidebarBtnRefs.current.length > 0) {
+      gsap.fromTo(
+        sidebarBtnRefs.current,
+        { opacity: 0, x: -30 },
+        {
+          opacity: 1,
+          x: 0,
+          duration: 0.5,
+          stagger: 0.05,
+          ease: 'power3.out',
+        }
+      );
+    }
+  }, [totalPages]);
+
+  // GSAP animation for lightbox modal
+  useEffect(() => {
+    if (lightboxRef.current && selectedMedia) {
+      gsap.fromTo(
+        lightboxRef.current,
+        { opacity: 0, scale: 0.9 },
+        { opacity: 1, scale: 1, duration: 0.5, ease: 'power3.out' }
+      );
+    }
+  }, [selectedMedia]);
+
+  // Scroll-Triggered Animations
+  useEffect(() => {
+    if (sectionRefs.current.length > 0 && mainContentRef.current) { // Reverted to checking mainContentRef.current
+      sectionRefs.current.forEach((section) => {
+        if (section) {
+          gsap.fromTo(
+            section,
+            { opacity: 0, y: 50 },
+            {
+              opacity: 1,
+              y: 0,
+              duration: 1,
+              scrollTrigger: {
+                trigger: section,
+                start: "top 80%",
+                scroller: mainContentRef.current, // Use the main content div as the scroller
+                toggleActions: "play none none none"
+              }
+            }
+          );
+        }
+      });
+      ScrollTrigger.refresh(); // Refreshing handled by useLocomotiveScroll hook
+    }
+  }, [filteredFiles, totalPages]); // Removed scroll dependency
+
+  // Parallax Effect
+  useEffect(() => {
+    if (parallaxRef.current && mainContentRef.current) { // Reverted to checking mainContentRef.current
+      gsap.to(parallaxRef.current, {
+        y: 100,
+        scrollTrigger: {
+          trigger: parallaxRef.current,
+          start: "top bottom",
+          end: "bottom top",
+          scroller: mainContentRef.current, // Use the main content div as the scroller
+          scrub: true
+        }
+      });
+    }
+  }, []); // Removed scroll dependency
+
+  // Loading Animation
+  useEffect(() => {
+    if (loadingRef.current) {
+      gsap.to(loadingRef.current, {
+        opacity: 0,
+        duration: 1,
+        delay: 2,
+        onComplete: () => {
+          if (loadingRef.current) {
+            loadingRef.current.style.display = 'none';
+          }
+        }
+      });
+    }
+  }, []);
+
+  // Interactive Animation on Button Click
+  const handleButtonClick = () => {
+    gsap.to(gsapHeaderRef.current, { scale: 1.2, duration: 0.3, yoyo: true, repeat: 1 });
+  };
 
   // Effect to update visible sidebar page based on scroll position
   useEffect(() => {
@@ -192,12 +356,25 @@ export default function Home() {
     return filteredFiles.slice(startIndex, endIndex).some(file => file.type.startsWith('image/'));
   };
 
-  // Calculate total pages needed based on filtered files and items per page
-  const itemsPerPage = 6; // Should match the itemsPerPage used in scrollToPage and pageHasImages
-  const totalPages = filteredFiles && filteredFiles.length > 0 ? Math.ceil(filteredFiles.length / itemsPerPage) : 1; // Ensure at least 1 page if no files
+  // GSAP hover effect for polaroid cards
+  const handlePolaroidMouseEnter = (idx: number) => {
+    if (polaroidRefs.current[idx]) {
+      gsap.to(polaroidRefs.current[idx], { scale: 1.05, boxShadow: '0 8px 32px rgba(68,98,74,0.18)', duration: 0.25, ease: 'power2.out' });
+    }
+  };
+  const handlePolaroidMouseLeave = (idx: number) => {
+    if (polaroidRefs.current[idx]) {
+      gsap.to(polaroidRefs.current[idx], { scale: 1, boxShadow: '0 4px 16px rgba(68,98,74,0.12)', duration: 0.25, ease: 'power2.inOut' });
+    }
+  };
 
   return (
     <>
+      {/* Loading Screen */}
+      <div ref={loadingRef} className="fixed inset-0 bg-white flex items-center justify-center z-50">
+        <div className="text-2xl font-bold">Loading...</div>
+      </div>
+
       {/* Sidebar with numbers - visually indicates scroll position and is clickable */}
       <div className="fixed left-0 top-0 bottom-0 w-20 flex flex-col items-center py-12 text-[#8ba888] font-mono z-20 hidden md:flex">
         <div className="flex-grow flex flex-col justify-center space-y-2 text-xl">
@@ -207,15 +384,19 @@ export default function Home() {
             const hasImages = pageHasImages(pageNumber);
             return (
               <motion.button
+                ref={el => { sidebarBtnRefs.current[i] = el || null; }}
                 key={i}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3, delay: i * 0.05 }}
                 onClick={() => scrollToPage(pageNumber)}
                 className={`transition-opacity duration-300 focus:outline-none ${
                   i + 1 <= visibleSidebarPage ? 'opacity-100 font-bold text-[--foreground]' : 'opacity-30 hover:text-[--muted-text]'
                 } ${!hasImages ? 'cursor-not-allowed opacity-20' : ''}`}
                 disabled={!hasImages || !Array.isArray(filteredFiles) || (filteredFiles.length === 0 && i > 0)}
+                onMouseEnter={() => {
+                  if (sidebarBtnRefs.current[i]) gsap.to(sidebarBtnRefs.current[i], { scale: 1.15, duration: 0.18, ease: 'power2.out' });
+                }}
+                onMouseLeave={() => {
+                  if (sidebarBtnRefs.current[i]) gsap.to(sidebarBtnRefs.current[i], { scale: 1, duration: 0.18, ease: 'power2.inOut' });
+                }}
               >
                 {(i + 1).toString().padStart(2, '0')}
               </motion.button>
@@ -227,39 +408,38 @@ export default function Home() {
       {/* Main scrollable content */}
       <div
         className="flex-grow w-full md:w-0 bg-[#f1ebe1] text-[#44624a] h-full overflow-y-auto min-h-screen"
-        ref={mainContentRef}
+        ref={mainContentRef} // Reverted ref to mainContentRef
       >
         <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-12">
           {/* Header section */}
-          <div className="mb-8 md:mb-12">
+          <div ref={el => { sectionRefs.current[0] = el || null; }} className="mb-8 md:mb-12">
             {/* PROGRAMS FEBRUARY 2021 Label */}
-            <div className="text-sm text-[#8ba888] mb-2">MATCHA</div>
-            <div className="text-xs text-[#8ba888] mb-4 md:mb-8">AUGUST 15</div>
+            <div ref={matchaRef} className="text-sm text-[#8ba888] mb-2">MATCHA</div>
+            <div ref={dateRef} className="text-xs text-[#8ba888] mb-4 md:mb-8">AUGUST 15</div>
 
-            <motion.h1
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
+            <h1
+              ref={gsapHeaderRef}
               className="text-4xl md:text-6xl font-extrabold mb-4 text-[#44624a]"
             >
-              Juna&apos;s Gallery
-            </motion.h1>
-            <p className="text-[#8ba888] max-w-lg text-sm md:text-base">
+              {/* GSAP will animate this text in */}
+            </h1>
+            <p ref={descriptionRef} className="text-[#8ba888] max-w-lg text-sm md:text-base">
               Discover the beauty of Gabriel Umlas&apos;s work
             </p>
           </div>
 
           {/* Grid of polaroids */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+          <div ref={el => { sectionRefs.current[1] = el || null; }} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {filteredFiles.map((file, index) => (
               <motion.div
+                ref={el => { polaroidRefs.current[index] = el || null; }}
                 key={file.url}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="relative aspect-square cursor-pointer bg-white p-3 md:p-5 shadow-lg transform transition-transform hover:scale-105 group hover:shadow-xl"
+                className="relative aspect-square cursor-pointer bg-white p-3 md:p-5 shadow-lg transform transition-transform group"
                 onClick={() => setSelectedMedia(file)}
                 data-scroll-id={`item-${index}`}
                 style={getPolaroidStyle(file)}
+                onMouseEnter={() => handlePolaroidMouseEnter(index)}
+                onMouseLeave={() => handlePolaroidMouseLeave(index)}
               >
                 <div className="relative overflow-hidden bg-white p-1 border border-[--border-color] flex items-center justify-center w-full h-full">
                   {file.type.startsWith('image/') ? (
@@ -337,9 +517,7 @@ export default function Home() {
       <AnimatePresence>
         {selectedMedia && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            ref={lightboxRef}
             className="fixed inset-0 backdrop-blur-lg z-50 flex items-center justify-center p-4"
             style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
             onClick={() => setSelectedMedia(null)}
